@@ -79,7 +79,7 @@ struct EmptyStateView: View {
             Image(systemName: icon)
                 .font(.system(size: 56))
                 .foregroundStyle(AppTheme.Colors.textTertiary)
-                .symbolEffect(.pulse, options: .repeating)
+                .symbolEffect(.pulse)
 
             Text(title)
                 .font(AppTheme.Typography.title3)

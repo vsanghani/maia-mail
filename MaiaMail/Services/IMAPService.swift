@@ -37,14 +37,19 @@ actor IMAPService {
 
         connection = NWConnection(host: nwHost, port: nwPort, using: params)
 
-        return try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var resumed = false
             connection?.stateUpdateHandler = { state in
+                guard !resumed else { return }
                 switch state {
                 case .ready:
+                    resumed = true
                     continuation.resume()
                 case .failed(let error):
+                    resumed = true
                     continuation.resume(throwing: IMAPError.connectionFailed(error.localizedDescription))
                 case .cancelled:
+                    resumed = true
                     continuation.resume(throwing: IMAPError.connectionCancelled)
                 default:
                     break
@@ -53,6 +58,7 @@ actor IMAPService {
             connection?.start(queue: .global(qos: .userInitiated))
         }
     }
+
 
     func disconnect() async {
         if isAuthenticated {
@@ -182,7 +188,7 @@ actor IMAPService {
             throw IMAPError.notConnected
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             connection.send(content: data, completion: .contentProcessed { error in
                 if let error = error {
                     continuation.resume(throwing: IMAPError.sendFailed(error.localizedDescription))
@@ -198,7 +204,7 @@ actor IMAPService {
             throw IMAPError.notConnected
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { content, _, _, error in
                 if let error = error {
                     continuation.resume(throwing: IMAPError.receiveFailed(error.localizedDescription))

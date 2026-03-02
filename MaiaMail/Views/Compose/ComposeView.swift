@@ -104,11 +104,13 @@ struct ComposeView: View {
                     .disabled(!viewModel.canSend || viewModel.isSending)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(
-                        viewModel.canSend && !viewModel.isSending
-                            ? AppTheme.Colors.accentGradient
-                            : LinearGradient(colors: [.gray.opacity(0.5)], startPoint: .leading, endPoint: .trailing)
-                    )
+                    .background {
+                        if viewModel.canSend && !viewModel.isSending {
+                            Capsule().fill(AppTheme.Colors.accentGradient)
+                        } else {
+                            Capsule().fill(Color.gray.opacity(0.5))
+                        }
+                    }
                     .clipShape(Capsule())
                     .foregroundStyle(.white)
                 }

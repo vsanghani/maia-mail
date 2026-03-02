@@ -1,6 +1,14 @@
 import Foundation
 
-struct EmailMessage: Identifiable, Codable, Equatable {
+struct EmailMessage: Identifiable, Codable, Hashable {
+    static func == (lhs: EmailMessage, rhs: EmailMessage) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
     let id: String
     var from: EmailAddress
     var to: [EmailAddress]

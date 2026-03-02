@@ -34,14 +34,19 @@ actor SMTPService {
 
         connection = NWConnection(host: nwHost, port: nwPort, using: params)
 
-        return try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            var resumed = false
             connection?.stateUpdateHandler = { state in
+                guard !resumed else { return }
                 switch state {
                 case .ready:
+                    resumed = true
                     continuation.resume()
                 case .failed(let error):
+                    resumed = true
                     continuation.resume(throwing: SMTPError.connectionFailed(error.localizedDescription))
                 case .cancelled:
+                    resumed = true
                     continuation.resume(throwing: SMTPError.connectionCancelled)
                 default:
                     break
@@ -189,7 +194,7 @@ actor SMTPService {
             throw SMTPError.notConnected
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             connection.send(content: data, completion: .contentProcessed { error in
                 if let error = error {
                     continuation.resume(throwing: SMTPError.sendFailed(error.localizedDescription))
@@ -205,7 +210,7 @@ actor SMTPService {
             throw SMTPError.notConnected
         }
 
-        return try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
             connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { content, _, _, error in
                 if let error = error {
                     continuation.resume(throwing: SMTPError.receiveFailed(error.localizedDescription))
