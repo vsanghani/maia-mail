@@ -11,6 +11,9 @@ actor IMAPService {
     private let useSSL: Bool
     private var tagCounter: Int = 0
     private var isAuthenticated: Bool = false
+    private var _isConnected: Bool = false
+
+    var isConnected: Bool { _isConnected && isAuthenticated }
 
     init(host: String, port: Int, useSSL: Bool = true) {
         self.host = host
@@ -39,7 +42,13 @@ actor IMAPService {
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             var resumed = false
-            connection?.stateUpdateHandler = { state in
+            connection?.stateUpdateHandler = { [weak self] state in
+                switch state {
+                case .failed, .cancelled:
+                    Task { await self?.markDisconnected() }
+                default:
+                    break
+                }
                 guard !resumed else { return }
                 switch state {
                 case .ready:
@@ -57,6 +66,7 @@ actor IMAPService {
             }
             connection?.start(queue: .global(qos: .userInitiated))
         }
+        _isConnected = true
     }
 
 
@@ -67,6 +77,23 @@ actor IMAPService {
         connection?.cancel()
         connection = nil
         isAuthenticated = false
+        _isConnected = false
+    }
+
+    private func markDisconnected() {
+        _isConnected = false
+        isAuthenticated = false
+        connection = nil
+    }
+
+    func ensureConnected(email: String, password: String) async throws {
+        guard !isConnected else { return }
+        connection?.cancel()
+        connection = nil
+        isAuthenticated = false
+        _isConnected = false
+        try await connect()
+        try await login(email: email, password: password)
     }
 
     // MARK: - Authentication

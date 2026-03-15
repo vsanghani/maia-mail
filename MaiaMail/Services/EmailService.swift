@@ -12,6 +12,9 @@ class EmailService: ObservableObject {
     // MARK: - Configuration
 
     func configure(with account: EmailAccount) {
+        if let existing = imapService {
+            Task { await existing.disconnect() }
+        }
         self.account = account
         self.imapService = IMAPService(
             host: account.imapHost,
@@ -23,6 +26,10 @@ class EmailService: ObservableObject {
             port: account.smtpPort,
             useSSL: account.useSSL
         )
+    }
+
+    func disconnect() async {
+        await imapService?.disconnect()
     }
 
     // MARK: - Test Connection
@@ -44,12 +51,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
-        let messages = try await imapService.fetchMessages(folder: folder, limit: limit)
-        await imapService.disconnect()
-
-        return messages
+        try await imapService.ensureConnected(email: account.email, password: account.password)
+        return try await imapService.fetchMessages(folder: folder, limit: limit)
     }
 
     // MARK: - Fetch Folders
@@ -59,12 +62,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
-        let folders = try await imapService.listFolders()
-        await imapService.disconnect()
-
-        return folders
+        try await imapService.ensureConnected(email: account.email, password: account.password)
+        return try await imapService.listFolders()
     }
 
     // MARK: - Send Email
@@ -101,10 +100,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
+        try await imapService.ensureConnected(email: account.email, password: account.password)
         try await imapService.markAsRead(folder: message.folder, uid: message.uid)
-        await imapService.disconnect()
     }
 
     func markAsUnread(message: EmailMessage) async throws {
@@ -112,10 +109,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
+        try await imapService.ensureConnected(email: account.email, password: account.password)
         try await imapService.markAsUnread(folder: message.folder, uid: message.uid)
-        await imapService.disconnect()
     }
 
     func toggleStar(message: EmailMessage) async throws {
@@ -123,10 +118,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
+        try await imapService.ensureConnected(email: account.email, password: account.password)
         try await imapService.toggleStar(folder: message.folder, uid: message.uid, star: !message.isStarred)
-        await imapService.disconnect()
     }
 
     func deleteMessage(_ message: EmailMessage) async throws {
@@ -134,10 +127,8 @@ class EmailService: ObservableObject {
             throw EmailServiceError.notConfigured
         }
 
-        try await imapService.connect()
-        try await imapService.login(email: account.email, password: account.password)
+        try await imapService.ensureConnected(email: account.email, password: account.password)
         try await imapService.deleteMessage(folder: message.folder, uid: message.uid)
-        await imapService.disconnect()
     }
 }
 

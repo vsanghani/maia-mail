@@ -135,4 +135,12 @@ class InboxViewModel: ObservableObject {
     var unreadCount: Int {
         emails.filter { !$0.isRead }.count
     }
+
+    func signOut() {
+        emails = []
+        filteredEmails = []
+        errorMessage = nil
+        accountViewModel = nil
+        Task { await emailService.disconnect() }
+    }
 }

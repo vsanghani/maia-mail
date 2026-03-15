@@ -101,6 +101,7 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.large)
             .alert("Sign Out?", isPresented: $showSignOutAlert) {
                 Button("Sign Out", role: .destructive) {
+                    inboxViewModel.signOut()
                     accountViewModel.signOut()
                 }
                 Button("Cancel", role: .cancel) {}
