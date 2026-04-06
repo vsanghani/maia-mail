@@ -29,6 +29,8 @@
 		AA000020 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000020; };
 		AA000021 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021; };
 		AA000022 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AB000022; };
+		AA000023 /* SimulatedInboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023; };
+		AA000024 /* ForgeEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +56,8 @@
 		AB000020 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AB000021 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		AB000022 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AB000023 /* SimulatedInboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedInboxStore.swift; sourceTree = "<group>"; };
+		AB000024 /* ForgeEmailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeEmailView.swift; sourceTree = "<group>"; };
 		AC000001 /* MaiaMail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MaiaMail.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -107,6 +111,7 @@
 				AB000006 /* SMTPService.swift */,
 				AB000007 /* EmailService.swift */,
 				AB000008 /* KeychainHelper.swift */,
+				AB000023 /* SimulatedInboxStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -157,6 +162,7 @@
 			children = (
 				AB000019 /* AccountSetupView.swift */,
 				AB000020 /* SettingsView.swift */,
+				AB000024 /* ForgeEmailView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -291,6 +297,8 @@
 				AA000019 /* AccountSetupView.swift in Sources */,
 				AA000020 /* SettingsView.swift in Sources */,
 				AA000021 /* Components.swift in Sources */,
+				AA000023 /* SimulatedInboxStore.swift in Sources */,
+				AA000024 /* ForgeEmailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

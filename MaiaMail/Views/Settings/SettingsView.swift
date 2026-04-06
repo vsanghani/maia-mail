@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject var accountViewModel: AccountViewModel
     @EnvironmentObject var inboxViewModel: InboxViewModel
     @State private var showSignOutAlert = false
+    @State private var showForgeEmail = false
 
     var body: some View {
         NavigationStack {
@@ -57,6 +58,21 @@ struct SettingsView: View {
                             Text("Server Configuration")
                                 .font(AppTheme.Typography.caption)
                         }
+
+                        Section {
+                            Button {
+                                showForgeEmail = true
+                            } label: {
+                                Label("Add simulated inbox message…", systemImage: "doc.badge.plus")
+                                    .foregroundStyle(AppTheme.Colors.primary)
+                            }
+                        } header: {
+                            Text("Demos")
+                                .font(AppTheme.Typography.caption)
+                        } footer: {
+                            Text("Insert a message that appears in Inbox on this device only, with any From and recipients you choose. Nothing is sent or uploaded.")
+                                .font(AppTheme.Typography.caption)
+                        }
                     }
 
                     // App Info
@@ -107,6 +123,10 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("You will need to sign in again to access your email.")
+            }
+            .sheet(isPresented: $showForgeEmail) {
+                ForgeEmailView()
+                    .environmentObject(inboxViewModel)
             }
         }
     }

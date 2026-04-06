@@ -364,12 +364,14 @@ actor IMAPService {
                 bcc: [],
                 subject: subject,
                 body: body,
+                htmlBody: nil,
                 date: date,
                 isRead: isRead,
                 isStarred: isStarred,
                 folder: folder,
                 snippet: snippet,
-                uid: uid
+                uid: uid,
+                isSimulated: false
             )
 
             if uid > 0 {

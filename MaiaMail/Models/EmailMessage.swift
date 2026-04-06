@@ -1,6 +1,6 @@
 import Foundation
 
-struct EmailMessage: Identifiable, Codable, Hashable {
+struct EmailMessage: Identifiable, Hashable {
     static func == (lhs: EmailMessage, rhs: EmailMessage) -> Bool {
         lhs.id == rhs.id
     }
@@ -23,6 +23,8 @@ struct EmailMessage: Identifiable, Codable, Hashable {
     var folder: String
     var snippet: String
     var uid: UInt32
+    /// Stored only on-device; never fetched from or synced to IMAP.
+    var isSimulated: Bool
 
     var senderInitials: String {
         let parts = from.name?.split(separator: " ") ?? from.address.split(separator: "@")
@@ -83,13 +85,59 @@ struct EmailMessage: Identifiable, Codable, Hashable {
             bcc: [],
             subject: subjects[i],
             body: snippets[i] + "\n\nBest regards,\n\(senders[i].name ?? "Sender")",
+            htmlBody: nil,
             date: Date().addingTimeInterval(-Double(index) * 3600),
             isRead: index > 1,
             isStarred: index == 0,
             folder: "INBOX",
             snippet: snippets[i],
-            uid: UInt32(index + 1)
+            uid: UInt32(index + 1),
+            isSimulated: false
         )
+    }
+}
+
+extension EmailMessage: Codable {
+    enum CodingKeys: String, CodingKey {
+        case id, from, to, cc, bcc, subject, body, htmlBody, date, isRead, isStarred, folder, snippet, uid, isSimulated
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        from = try c.decode(EmailAddress.self, forKey: .from)
+        to = try c.decode([EmailAddress].self, forKey: .to)
+        cc = try c.decodeIfPresent([EmailAddress].self, forKey: .cc) ?? []
+        bcc = try c.decodeIfPresent([EmailAddress].self, forKey: .bcc) ?? []
+        subject = try c.decode(String.self, forKey: .subject)
+        body = try c.decode(String.self, forKey: .body)
+        htmlBody = try c.decodeIfPresent(String.self, forKey: .htmlBody)
+        date = try c.decode(Date.self, forKey: .date)
+        isRead = try c.decode(Bool.self, forKey: .isRead)
+        isStarred = try c.decode(Bool.self, forKey: .isStarred)
+        folder = try c.decode(String.self, forKey: .folder)
+        snippet = try c.decode(String.self, forKey: .snippet)
+        uid = try c.decode(UInt32.self, forKey: .uid)
+        isSimulated = try c.decodeIfPresent(Bool.self, forKey: .isSimulated) ?? false
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(from, forKey: .from)
+        try c.encode(to, forKey: .to)
+        try c.encode(cc, forKey: .cc)
+        try c.encode(bcc, forKey: .bcc)
+        try c.encode(subject, forKey: .subject)
+        try c.encode(body, forKey: .body)
+        try c.encodeIfPresent(htmlBody, forKey: .htmlBody)
+        try c.encode(date, forKey: .date)
+        try c.encode(isRead, forKey: .isRead)
+        try c.encode(isStarred, forKey: .isStarred)
+        try c.encode(folder, forKey: .folder)
+        try c.encode(snippet, forKey: .snippet)
+        try c.encode(uid, forKey: .uid)
+        try c.encode(isSimulated, forKey: .isSimulated)
     }
 }
 
@@ -106,5 +154,30 @@ struct EmailAddress: Codable, Equatable, Hashable {
             return "\(name) <\(address)>"
         }
         return address
+    }
+
+    /// Parses one line such as `alice@example.com` or `Alice <alice@example.com>`.
+    static func parseSingle(_ raw: String) -> EmailAddress? {
+        let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !line.isEmpty else { return nil }
+
+        if let open = line.lastIndex(of: "<"),
+           let close = line.firstIndex(of: ">"),
+           open < close {
+            let namePart = line[..<open].trimmingCharacters(in: .whitespaces)
+            let addrStart = line.index(after: open)
+            let addr = line[addrStart..<close].trimmingCharacters(in: .whitespaces)
+            guard !addr.isEmpty else { return nil }
+            let name: String? = namePart.isEmpty ? nil : String(namePart)
+            return EmailAddress(name: name, address: String(addr))
+        }
+
+        return EmailAddress(name: nil, address: line)
+    }
+
+    /// One recipient per line; blank lines ignored. Lines can use `Name <email>` form.
+    static func parseRecipientList(_ text: String) -> [EmailAddress] {
+        text.components(separatedBy: .newlines)
+            .compactMap { parseSingle($0) }
     }
 }

@@ -68,6 +68,18 @@ struct EmailDetailView: View {
                                 .foregroundStyle(AppTheme.Colors.textSecondary)
                         }
                     }
+
+                    if !email.bcc.isEmpty {
+                        HStack(spacing: AppTheme.Spacing.xs) {
+                            Text("Bcc:")
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(AppTheme.Colors.textTertiary)
+
+                            Text(email.bcc.map { $0.displayName }.joined(separator: ", "))
+                                .font(AppTheme.Typography.caption)
+                                .foregroundStyle(AppTheme.Colors.textSecondary)
+                        }
+                    }
                 }
                 .padding(AppTheme.Spacing.lg)
                 .background(AppTheme.Colors.cardBackground)
